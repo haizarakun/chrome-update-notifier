@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Update Notifier",
+  "version": "1.1.0",
+  "description": "4週リリース周期を予測し、必要な時だけ確認してChromeの更新を通知",
+  "permissions": ["alarms", "notifications", "storage"],
+  "host_permissions": ["https://versionhistory.googleapis.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "今すぐ更新チェック" }
+}
