@@ -1,9 +1,49 @@
-MIT License
+Source-Available License (View Only)
+ソース公開ライセンス（閲覧のみ）
 
-Copyright (c) 2026 haizarakun
+Copyright (c) 2026 haizarakun. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+------------------------------------------------------------
+日本語（正文）
+------------------------------------------------------------
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+本ソフトウェアのソースコードは、閲覧および学習の目的でのみ公開されています。
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+【許可されること】
+- 本リポジトリのソースコードを閲覧すること
+- 内容を読んで学習・参考にすること
+
+【許可されないこと】（著作権者の事前の書面による許諾がない限り）
+- 複製、改変、翻案、二次的著作物の作成
+- 再配布、公開、送信可能化（フォークの公開を含む）
+- 商用・非商用を問わない利用、販売、サブライセンス
+- 本ソフトウェアまたはその一部を含む製品の配布
+
+本ソフトウェアは現状有姿で提供され、明示黙示を問わずいかなる保証もありません。
+著作権者は、本ソフトウェアに関連して生じたいかなる請求、損害、その他の責任も
+負いません。
+
+上記以外の利用をご希望の場合は、著作権者にご連絡ください。
+
+------------------------------------------------------------
+English (reference translation)
+------------------------------------------------------------
+
+The source code of this software is published for viewing and study purposes
+only.
+
+Permitted:
+- Viewing the source code in this repository
+- Reading it for learning and reference
+
+Not permitted, without the prior written permission of the copyright holder:
+- Copying, modifying, adapting, or creating derivative works
+- Redistributing, publishing, or making it available (including publishing forks)
+- Any use, sale, or sublicensing, whether commercial or non-commercial
+- Distributing any product that contains this software or any part of it
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE.
+
+For any other use, please contact the copyright holder.

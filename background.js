@@ -1,6 +1,6 @@
 // Chrome stable は4週(28日)周期・火曜リリース。予測日の2日前〜次版検出まで＋7日毎の軽い確認のみfetchする。
 const ICON = 'icon128.png';
-const D = 864e5, CYCLE = 28 * D, LEAD = 2 * D, FALLBACK = 7 * D, VER = /^\d+\.\d+\.\d+\.\d+$/, SEMVER = /^v?(\d+\.\d+\.\d+)$/;
+const D = 864e5, CYCLE = 28 * D, LEAD = 2 * D, FALLBACK = 7 * D, VER = /^\d+\.\d+\.\d+\.\d+$/, SEMVER = /^v?(\d+(?:\.\d+){0,3})$/;
 const REPO = 'haizarakun/chrome-update-notifier', REL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const url = p => `https://versionhistory.googleapis.com/v1/chrome/platforms/${p}/channels/stable/versions/all/releases?filter=fraction%3D1&order_by=starttime%20desc&pageSize=1`;
 const cmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 4; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
