@@ -1,6 +1,7 @@
 // Chrome stable は4週(28日)周期・火曜リリース。予測日の2日前〜次版検出まで＋7日毎の軽い確認のみfetchする。
 const ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAyklEQVR42u3a2w2DMBBEUTxNIJEykzLSJhLpIh9pILb3ZXG3gN05xiAsaMfz2lYubYsXAAAAAAAA4Frne18Y8EvvalDM2vsZFLZznAyK3PceBgXfteYGHqP9C2x7ERSc3tyg+PS2BqWkNzQoK72VQYnpTTooN/18H6Wnn+ymCulneqpI+uHO93uV8D5h9fZXqfQDU1Qtfe8sFUzfNVE10/8/t1l94BhAPl4fTmQAAAAAAAAAAAAAAAAAAADAbQGN3y4BAAAAAMDK9QW7ekalgMvmWwAAAABJRU5ErkJggg==';
-const D = 864e5, CYCLE = 28 * D, LEAD = 2 * D, FALLBACK = 7 * D, VER = /^\d+\.\d+\.\d+\.\d+$/;
+const D = 864e5, CYCLE = 28 * D, LEAD = 2 * D, FALLBACK = 7 * D, VER = /^\d+\.\d+\.\d+\.\d+$/, SEMVER = /^v?(\d+\.\d+\.\d+)$/;
+const REPO = 'haizarakun/chrome-update-notifier', REL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const url = p => `https://versionhistory.googleapis.com/v1/chrome/platforms/${p}/channels/stable/versions/all/releases?filter=fraction%3D1&order_by=starttime%20desc&pageSize=1`;
 const cmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 4; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 const platform = () => { const p = (navigator.userAgentData?.platform || navigator.userAgent).toLowerCase();
@@ -10,7 +11,7 @@ async function current() {
   return navigator.userAgent.match(/Chrome\/([\d.]+)/)?.[1];
 }
 async function check(force = false) {
-  const now = Date.now(), s = await chrome.storage.local.get(['lastRelease', 'lastFetch', 'notified']);
+  const now = Date.now(), s = await chrome.storage.local.get(['lastRelease', 'lastFetch', 'notified', 'extNotified']);
   const due = !s.lastRelease || now >= s.lastRelease + CYCLE - LEAD || now - (s.lastFetch || 0) >= FALLBACK;
   if (!force && !due) return;
   const cur = await current();
@@ -31,10 +32,28 @@ async function check(force = false) {
     if (force) chrome.notifications.create('ok', { type: 'basic', iconUrl: ICON, title: '最新です', message: `Chrome ${cur}\n次回予測: ${new Date(start + CYCLE).toLocaleDateString()}` });
   }
   await chrome.storage.local.set(upd);
+  await selfCheck(force, s.extNotified);
+}
+// この拡張自体の新リリースをGitHubで確認（Chrome版の確認と同じタイミングのみ＝追加コストほぼゼロ）
+async function selfCheck(force, extNotified) {
+  let tag;
+  try { tag = (await (await fetch(REL, { signal: AbortSignal.timeout(10000), credentials: 'omit', headers: { Accept: 'application/vnd.github+json' } })).json()).tag_name; } catch { return; }
+  const latest = SEMVER.exec(tag || '')?.[1], cur = chrome.runtime.getManifest().version;
+  if (!latest || cmp(latest, cur) <= 0 || (!force && extNotified === latest)) return;
+  await chrome.storage.local.set({ extNotified: latest });
+  chrome.notifications.create('ext', { type: 'basic', iconUrl: ICON, requireInteraction: true,
+    title: `Chrome Update Notifier v${latest} が公開`, message: `現在 v${cur}。「更新」でダウンロードページを開きます。「拒否」でこの拡張を削除します。`,
+    buttons: [{ title: '更新' }, { title: '拒否（拡張を削除）' }] });
 }
 chrome.runtime.onInstalled.addListener(() => { chrome.alarms.create('chk', { periodInMinutes: 1440 }); check(true); });
 chrome.runtime.onStartup.addListener(() => check());
 chrome.alarms.onAlarm.addListener(() => check());
-chrome.notifications.onClicked.addListener(id => { if (id === 'upd') chrome.tabs.create({ url: 'chrome://settings/help' }); chrome.notifications.clear(id); });
+const open = id => chrome.tabs.create({ url: id === 'upd' ? 'chrome://settings/help' : `https://github.com/${REPO}/releases/latest` });
+chrome.notifications.onClicked.addListener(id => { if (id === 'upd' || id === 'ext') open(id); chrome.notifications.clear(id); });
+chrome.notifications.onButtonClicked.addListener((id, i) => {
+  chrome.notifications.clear(id);
+  if (id !== 'ext') return;
+  if (i === 0) open(id); else chrome.management.uninstallSelf({ showConfirmDialog: true });
+});
 chrome.action.onClicked.addListener(() => check(true));
-if (typeof module !== 'undefined') module.exports = { cmp, check, CYCLE, LEAD, FALLBACK };
+if (typeof module !== 'undefined') module.exports = { cmp, check, selfCheck, CYCLE, LEAD, FALLBACK };
