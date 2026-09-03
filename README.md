@@ -14,6 +14,18 @@ Chromeの新バージョンを最小リソースで検知して通知する拡�
 2. `chrome://extensions` → 右上「デベロッパーモード」ON
 3. 「パッケージ化されていない拡張機能を読み込む」→ 解凍したフォルダを選択
 
+## セキュリティ
+- 権限は `alarms` / `notifications` / `storage` と Google公式API 1ホストのみ。`tabs`・`<all_urls>`・content script なし → ページ内容に一切触れない
+- 外部データ（バージョン文字列・日時）は正規表現で形式検証してから使用。通知文への文字列注入不可
+- fetch は10秒タイムアウト・Cookie送信なし（`credentials: 'omit'`）、失敗時は静かに次回へ
+- `eval` / リモートコード / 外部ライブラリ なし（MV3準拠）。`minimum_chrome_version: 116`
+
+## テスト
+```
+npm test   # Node 22+, 依存ゼロ
+```
+バージョン比較・通知の重複抑止・予測ゲーティング・不正データ/オフライン耐性を検証。push毎にGitHub Actionsで自動実行。
+
 ## 制約
 拡張機能APIではChrome本体の更新適用・再起動は実行できないため、通知＋更新ページ表示までです。
 
