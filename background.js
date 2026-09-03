@@ -1,5 +1,5 @@
 // Chrome stable は4週(28日)周期・火曜リリース。予測日の2日前〜次版検出まで＋7日毎の軽い確認のみfetchする。
-const ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAyklEQVR42u3a2w2DMBBEUTxNIJEykzLSJhLpIh9pILb3ZXG3gN05xiAsaMfz2lYubYsXAAAAAAAA4Frne18Y8EvvalDM2vsZFLZznAyK3PceBgXfteYGHqP9C2x7ERSc3tyg+PS2BqWkNzQoK72VQYnpTTooN/18H6Wnn+ymCulneqpI+uHO93uV8D5h9fZXqfQDU1Qtfe8sFUzfNVE10/8/t1l94BhAPl4fTmQAAAAAAAAAAAAAAAAAAADAbQGN3y4BAAAAAMDK9QW7ekalgMvmWwAAAABJRU5ErkJggg==';
+const ICON = 'icon128.png';
 const D = 864e5, CYCLE = 28 * D, LEAD = 2 * D, FALLBACK = 7 * D, VER = /^\d+\.\d+\.\d+\.\d+$/, SEMVER = /^v?(\d+\.\d+\.\d+)$/;
 const REPO = 'haizarakun/chrome-update-notifier', REL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const url = p => `https://versionhistory.googleapis.com/v1/chrome/platforms/${p}/channels/stable/versions/all/releases?filter=fraction%3D1&order_by=starttime%20desc&pageSize=1`;
@@ -53,7 +53,14 @@ chrome.notifications.onClicked.addListener(id => { if (id === 'upd' || id === 'e
 chrome.notifications.onButtonClicked.addListener((id, i) => {
   chrome.notifications.clear(id);
   if (id !== 'ext') return;
-  if (i === 0) open(id); else chrome.management.uninstallSelf({ showConfirmDialog: true });
+  if (i === 0) open(id); else removeSelf();
 });
+// 削除: 確認ダイアログ付き → 失敗ならダイアログなし → それも不可なら拡張ページを開いて手動削除を案内
+async function removeSelf() {
+  for (const opts of [{ showConfirmDialog: true }, {}]) {
+    try { await chrome.management.uninstallSelf(opts); return; } catch (e) { if (/canceled|cancelled/i.test(e?.message || '')) return; }
+  }
+  chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+}
 chrome.action.onClicked.addListener(() => check(true));
-if (typeof module !== 'undefined') module.exports = { cmp, check, selfCheck, CYCLE, LEAD, FALLBACK };
+if (typeof module !== 'undefined') module.exports = { cmp, check, selfCheck, removeSelf, CYCLE, LEAD, FALLBACK };
