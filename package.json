@@ -1,0 +1,1 @@
+{ "name": "chrome-update-notifier", "version": "1.2.0", "private": true, "scripts": { "test": "node --test" } }
