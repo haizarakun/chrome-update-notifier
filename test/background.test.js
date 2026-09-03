@@ -8,8 +8,8 @@ function load(store = {}, fetchImpl) {
     notifications: { create: (id, o) => calls.notif.push({ id, ...o }), clear: () => {}, onClicked: { addListener() {} }, onButtonClicked: { addListener: f => calls.onBtn = f } },
     action: { setBadgeText: b => calls.badge.push(b.text), setBadgeBackgroundColor() {}, onClicked: { addListener() {} } },
     alarms: { create() {}, onAlarm: { addListener() {} } },
-    runtime: { onInstalled: { addListener() {} }, onStartup: { addListener() {} }, getManifest: () => ({ version: '1.3.0' }) },
-    management: { uninstallSelf: () => calls.uninstall = true },
+    runtime: { onInstalled: { addListener() {} }, onStartup: { addListener() {} }, getManifest: () => ({ version: '1.4.0' }), id: 'abc' },
+    management: { uninstallSelf: async () => { calls.uninstall = (calls.uninstall || 0) + 1; if (calls.failUninstall) throw new Error('boom'); } },
     tabs: { create: t => calls.tabs.push(t.url) },
   };
   Object.defineProperty(global, 'navigator', { configurable: true, value: { userAgent: 'Mozilla/5.0 (Windows NT 10.0) Chrome/140.0.7339.80', userAgentData: { platform: 'Windows' } } });
@@ -17,7 +17,7 @@ function load(store = {}, fetchImpl) {
   delete require.cache[require.resolve('../background.js')];
   return { m: require('../background.js'), calls, store };
 }
-const api = (version, startTime, tag = 'v1.3.0') => async u => ({ json: async () => u.includes('github') ? { tag_name: tag } : { releases: [{ version, serving: { startTime } }] } });
+const api = (version, startTime, tag = 'v1.4.0') => async u => ({ json: async () => u.includes('github') ? { tag_name: tag } : { releases: [{ version, serving: { startTime } }] } });
 
 test('cmp: semantic 4-part compare', () => {
   const { m } = load({}, api('0.0.0.0', '2026-01-01T00:00:00Z'));
@@ -55,14 +55,22 @@ test('predictive gating: no fetch outside window, fetch inside', async () => {
 });
 
 test('self-update: notify once on newer release; decline button uninstalls', async () => {
-  const { m, calls, store } = load({}, api('140.0.7339.80', '2026-08-04T00:00:00Z', 'v1.4.0'));
+  const { m, calls, store } = load({}, api('140.0.7339.80', '2026-08-04T00:00:00Z', 'v1.5.0'));
   await m.check(); await m.check(); await m.check(true);
   const ext = calls.notif.filter(n => n.id === 'ext');
   assert.strictEqual(ext.length, 2); // auto once (2nd auto suppressed) + forced
-  assert.strictEqual(store.extNotified, '1.4.0');
-  calls.onBtn('ext', 1); assert.strictEqual(calls.uninstall, true);
-  const { m: m2, calls: c2 } = load({}, api('140.0.7339.80', '2026-08-04T00:00:00Z', 'v1.3.0'));
+  assert.strictEqual(store.extNotified, '1.5.0');
+  await calls.onBtn('ext', 1); assert.strictEqual(calls.uninstall, 1);
+  const { m: m2, calls: c2 } = load({}, api('140.0.7339.80', '2026-08-04T00:00:00Z', 'v1.4.0'));
   await m2.check(); assert.strictEqual(c2.notif.filter(n => n.id === 'ext').length, 0);
+});
+
+test('removeSelf falls back to the extensions page when uninstall fails', async () => {
+  const { m, calls } = load({}, api('140.0.7339.80', '2026-08-04T00:00:00Z'));
+  calls.failUninstall = true;
+  await m.removeSelf();
+  assert.strictEqual(calls.uninstall, 2); // confirm-dialog attempt + plain attempt
+  assert.deepStrictEqual(calls.tabs, ['chrome://extensions/?id=abc']);
 });
 
 test('rejects malformed API data / network error safely', async () => {
